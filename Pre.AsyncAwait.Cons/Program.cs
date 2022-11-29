@@ -1,2 +1,10 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+namespace Pre.AsyncAwait.Cons;
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var app = new App();
+        app.Run();
+    }
+}
