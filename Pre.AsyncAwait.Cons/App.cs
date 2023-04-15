@@ -25,16 +25,16 @@ public class App
 
     public async Task Run()
     {
-        RunCopyFilesSync();
+        // RunCopyFilesSync();
 
-        RunCopyFilesAsync();
+        // RunCopyFilesAsync();
 
-        RunCalculateSum();
+        // RunCalculateSum();
 
         CalculateAndCopyAsync();
 
         // Wait to fininsh && cleanup
-        Console.ReadLine();
+        // Console.ReadLine();
         ClearFolder(_destinationPath);
     }
 
@@ -45,23 +45,24 @@ public class App
         Console.WriteLine($"The total sum is: {sum}");
     }
 
-    private void RunCopyFilesAsync()
+    private async void RunCopyFilesAsync()
     {
         using var progressBar = InitProgressBar();
 
         Console.WriteLine("Deleting files...");
         ClearFolder(_destinationPath);
         Console.WriteLine("Copy files async");
-        List<Task> taskList =
+        Task<List<Task>> taskList =
             CopyFilesAsync(Path.GetFullPath(_sourcePath), Path.GetFullPath(_destinationPath), progressBar);
-        
-        Task.WaitAll(taskList.ToArray());
-    }
+
+        Task.WaitAll(taskList);
+}
 
     private void RunCopyFilesSync()
     {
         Console.WriteLine("Deleting files...");
         ClearFolder(_destinationPath);
+
         Console.WriteLine("Copying files from source to dest (sync)");
         using var progressBar = InitProgressBar();
         CopyFilesSync(Path.GetFullPath(_sourcePath), Path.GetFullPath(_destinationPath), progressBar);
@@ -73,7 +74,7 @@ public class App
         ClearFolder(_destinationPath);
         Console.WriteLine("Copy files and calculate sum async");
         using var progressBar = InitProgressBar();
-        List<Task> taskList =
+        Task<List<Task>> taskList =
             CopyFilesAsync(Path.GetFullPath(_sourcePath), Path.GetFullPath(_destinationPath), progressBar);
         progressBar.MaxTicks = progressBar.MaxTicks + 1;
         Console.WriteLine("Calculate sum of all data");
@@ -82,7 +83,7 @@ public class App
         Console.WriteLine($"The total sum is: {totalSum}");
         progressBar.Tick($"The total sum is: {totalSum}");
 
-        Task.WaitAll(taskList.ToArray());
+        Task.WaitAll(taskList);
     }
 
     private int CalculateSum(string calculationsPath)
@@ -107,7 +108,7 @@ public class App
         }
     }
 
-    private List<Task> CopyFilesAsync(string sourcePath, string destinationPath, ProgressBar progressBar)
+    private async Task<List<Task>> CopyFilesAsync(string sourcePath, string destinationPath, ProgressBar progressBar)
     {
         string[] files = Directory.GetFiles(sourcePath);
         progressBar.MaxTicks = files.Length;
@@ -116,8 +117,7 @@ public class App
 
         foreach (var filename in files)
         {
-            Task t = Task.Run(() =>
-                CopySingleFileAsync(filename, filename.Replace(sourcePath, destinationPath), progressBar));
+            Task t = CopySingleFileAsync(filename, filename.Replace(sourcePath, destinationPath), progressBar);
             taskList.Add(t);
         }
 
@@ -131,10 +131,11 @@ public class App
         progressBar.Tick();
     }
 
-    private void CopyFilesSync(string sourcePath, string destinationPath, ProgressBar progressBar)
+    private async Task CopyFilesSync(string sourcePath, string destinationPath, ProgressBar progressBar)
     {
         string[] files = Directory.GetFiles(sourcePath);
         progressBar.MaxTicks = files.Length;
+
         foreach (string filename in files)
         {
             File.Copy(filename, filename.Replace(sourcePath, destinationPath));
